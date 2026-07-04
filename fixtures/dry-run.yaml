@@ -1,0 +1,11 @@
+name: dry run plan
+actions:
+  - connector: pm
+    action: create draft ticket
+    target: PROJ-7
+    sideEffect: draft
+    evidence: dry-run only
+  - connector: browser
+    action: inspect dashboard
+    target: analytics
+    sideEffect: read
