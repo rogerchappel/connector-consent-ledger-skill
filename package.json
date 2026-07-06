@@ -10,7 +10,9 @@
     "test": "node --test",
     "check": "node --check src/*.js test/*.test.js",
     "build": "node --check src/*.js test/*.test.js",
-    "smoke": "node src/cli.js review fixtures/mixed-actions.json --format markdown"
+    "smoke": "node src/cli.js review fixtures/mixed-actions.json --format markdown",
+    "package:smoke": "node scripts/package-smoke.mjs",
+    "release:check": "npm test && npm run check && npm run build && npm run smoke && npm run package:smoke"
   },
   "keywords": [
     "agent-skill",
@@ -28,10 +30,15 @@
     "fixtures",
     "docs",
     "SKILL.md",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/rogerchappel/connector-consent-ledger-skill.git"
-  }
+  },
+  "bugs": {
+    "url": "https://github.com/rogerchappel/connector-consent-ledger-skill/issues"
+  },
+  "homepage": "https://github.com/rogerchappel/connector-consent-ledger-skill#readme"
 }
