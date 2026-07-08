@@ -20,6 +20,20 @@ The CLI never calls Slack, CRMs, browsers, project-management systems, or MCP se
 ## Limitations
 
 YAML support is intentionally tiny and meant for simple fixture-style plans. Use JSON for complex inputs.
+
+## Release Verification
+
+Run the full release gate before opening a release-facing pull request:
+
+```bash
+npm run release:check
+```
+
+The release gate runs syntax checks, Node tests, fixture-backed CLI smoke, and
+the package smoke script. The package smoke script fails if the npm tarball would
+omit the CLI source, fixtures, release docs, security policy, contribution guide,
+changelog, skill instructions, README, or license.
+
 ## Development checks
 
 Run the same local gates that CI runs before opening a PR:
@@ -30,4 +44,3 @@ npm run build --if-present
 npm test --if-present
 npm run smoke --if-present
 ```
-
