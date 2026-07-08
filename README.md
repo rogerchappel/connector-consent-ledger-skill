@@ -20,3 +20,14 @@ The CLI never calls Slack, CRMs, browsers, project-management systems, or MCP se
 ## Limitations
 
 YAML support is intentionally tiny and meant for simple fixture-style plans. Use JSON for complex inputs.
+## Development checks
+
+Run the same local gates that CI runs before opening a PR:
+
+```bash
+npm run check --if-present
+npm run build --if-present
+npm test --if-present
+npm run smoke --if-present
+```
+
