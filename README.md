@@ -13,6 +13,19 @@ node src/cli.js record fixtures/mixed-actions.json --ledger /tmp/consent-ledger.
 node src/cli.js summarize /tmp/consent-ledger.jsonl --format markdown
 ```
 
+## Verification
+
+Run the same checks used for release-readiness before publishing or opening a release PR:
+
+```bash
+npm run check
+npm test
+npm run build
+npm run smoke
+npm run release:check
+npm pack --dry-run
+```
+
 ## Safety Notes
 
 The CLI never calls Slack, CRMs, browsers, project-management systems, or MCP servers. `review` is read-only. `record` only appends local JSONL entries to the path you provide.
