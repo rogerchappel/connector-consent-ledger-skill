@@ -12,7 +12,8 @@
     "build": "node --check src/*.js test/*.test.js",
     "smoke": "node src/cli.js review fixtures/mixed-actions.json --format markdown",
     "package:smoke": "node scripts/package-smoke.mjs",
-    "release:check": "npm test && npm run check && npm run build && npm run smoke && npm run package:smoke"
+    "release:readiness": "node scripts/validate-release-readiness.mjs",
+    "release:check": "npm run release:readiness && npm test && npm run check && npm run build && npm run smoke && npm run package:smoke"
   },
   "keywords": [
     "agent-skill",
