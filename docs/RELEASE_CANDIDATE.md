@@ -10,6 +10,8 @@ ship
 - `npm run check`
 - `npm run build`
 - `npm run smoke`
+- `npm run package:smoke`
+- `npm run release:check`
 - `node src/cli.js record fixtures/mixed-actions.json --ledger /tmp/consent-ledger.jsonl`
 
 ## Notes

@@ -34,6 +34,10 @@ the package smoke script. The package smoke script fails if the npm tarball woul
 omit the CLI source, fixtures, release docs, security policy, contribution guide,
 changelog, skill instructions, README, or license.
 
+`npm run release:readiness` also verifies the public metadata, CLI bin target,
+supporting docs, fixture presence, npm files allowlist, and CI workflow before
+runtime checks execute.
+
 ## Development checks
 
 Run the same local gates that CI runs before opening a PR:
