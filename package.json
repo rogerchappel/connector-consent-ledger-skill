@@ -35,7 +35,9 @@
     "LICENSE",
     "SECURITY.md",
     "CONTRIBUTING.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "scripts",
+    "test"
   ],
   "repository": {
     "type": "git",
