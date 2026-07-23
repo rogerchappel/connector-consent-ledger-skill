@@ -56,8 +56,17 @@ function matches(value, patterns) {
 }
 
 function hasApproval(evidence, policy) {
-  const haystack = evidence.join(" ").toLowerCase();
-  return policy.approvalEvidence.some((marker) => haystack.includes(marker));
+  const markers = policy.approvalEvidence.map(normalizeEvidence).filter(Boolean);
+  return evidence.some((item) => {
+    const normalized = normalizeEvidence(item);
+    return markers.some((marker) =>
+      normalized === marker || normalized.startsWith(`${marker}:`)
+    );
+  });
+}
+
+function normalizeEvidence(value) {
+  return String(value).trim().toLowerCase();
 }
 
 function highestState(actions) {
