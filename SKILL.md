@@ -14,6 +14,9 @@ Use this skill when an agent has a planned connector action and must prove what 
 - No network request is made.
 - Ledger writes happen only when `record --ledger <file>` is used.
 - Credentialed writes, destructive operations, and external sends require explicit approval evidence.
+- Approval evidence must be an exact policy marker (for example, `approval`) or
+  use `marker:<reference>` (for example, `approval:ticket #42`). Free-form
+  phrases and substring collisions do not grant approval.
 
 ## Workflow
 

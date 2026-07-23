@@ -30,6 +30,26 @@ npm pack --dry-run
 
 The CLI never calls Slack, CRMs, browsers, project-management systems, or MCP servers. `review` is read-only. `record` only appends local JSONL entries to the path you provide.
 
+### Approval evidence syntax
+
+Ask-first actions become `approved` only when one evidence array entry is either
+an exact policy marker or a marker followed by a colon and a reference:
+
+```json
+{
+  "evidence": ["approval:ticket #42", "reviewed by release manager"]
+}
+```
+
+Matching is case-insensitive and ignores surrounding whitespace. With the
+default policy, `approval` and `ticket:CAB-19` are accepted; free-form text such
+as `approval denied`, `disapproval recorded`, and `approval ticket #42` is not.
+Custom `approvalEvidence` markers follow the same syntax.
+
+Versions before this change used substring matching. Migrate existing plans by
+changing positive free-form entries to `marker:<reference>` or an exact marker.
+Keep denial and contextual notes as separate entries; they never grant approval.
+
 ## Limitations
 
 YAML support is intentionally tiny and meant for simple fixture-style plans. Use JSON for complex inputs.

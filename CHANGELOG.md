@@ -3,6 +3,8 @@
 ## [Unreleased]
 
 - Add release-readiness checks for package metadata, pack contents, and CI verification.
+- Require explicit `marker` or `marker:<reference>` approval evidence instead of
+  unsafe substring matches, including for recorded ledger entries.
 ## 0.1.0
 
 - Initial release candidate for local connector consent review.
