@@ -17,6 +17,11 @@ Use this skill when an agent has a planned connector action and must prove what 
 - Approval evidence must be an exact policy marker (for example, `approval`) or
   use `marker:<reference>` (for example, `approval:ticket #42`). Free-form
   phrases and substring collisions do not grant approval.
+- Side effects match complete, case-insensitive tokens separated by
+  non-alphanumeric characters. Unknown effects remain ask-first; classification
+  precedence is blocked, read-only, draft, then ask-first.
+- `review` and `summarize` accept only `markdown` or `json` as explicit
+  `--format` values.
 
 ## Workflow
 
