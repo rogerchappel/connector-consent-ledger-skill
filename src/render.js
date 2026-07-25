@@ -21,5 +21,7 @@ export function renderJson(report) {
 }
 
 export function renderReport(report, format = "markdown") {
-  return format === "json" ? renderJson(report) : renderMarkdown(report);
+  if (format === "markdown") return renderMarkdown(report);
+  if (format === "json") return renderJson(report);
+  throw new Error("--format requires one of: markdown, json");
 }

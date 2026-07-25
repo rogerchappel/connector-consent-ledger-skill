@@ -26,7 +26,7 @@ async function review(args) {
   const options = parseOptions(args.slice(1));
   const policy = options.policy ? JSON.parse(await readFile(options.policy, "utf8")) : {};
   const report = reviewPlan(await readPlan(file), policy);
-  process.stdout.write(renderReport(report, options.format || "markdown"));
+  process.stdout.write(renderReport(report, outputFormat(options, "markdown")));
   failOn(report, options["fail-on"]);
 }
 
@@ -45,7 +45,8 @@ async function summarize(args) {
   if (!file) throw new Error("summarize requires a ledger file");
   const options = parseOptions(args.slice(1));
   const summary = await summarizeLedger(file);
-  process.stdout.write(options.format === "markdown" ? ledgerMarkdown(summary) : JSON.stringify(summary, null, 2) + "\n");
+  const format = outputFormat(options, "json");
+  process.stdout.write(format === "markdown" ? ledgerMarkdown(summary) : JSON.stringify(summary, null, 2) + "\n");
 }
 
 async function initPolicy(args) {
@@ -64,6 +65,14 @@ function parseOptions(args) {
     options[key] = next && !next.startsWith("--") ? args[++index] : true;
   }
   return options;
+}
+
+function outputFormat(options, fallback) {
+  const format = options.format ?? fallback;
+  if (format !== "markdown" && format !== "json") {
+    throw new Error("--format requires one of: markdown, json");
+  }
+  return format;
 }
 
 function failOn(report, state) {
