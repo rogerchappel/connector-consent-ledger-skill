@@ -52,7 +52,10 @@ function evidenceList(value) {
 }
 
 function matches(value, patterns) {
-  return patterns.some((pattern) => value.includes(pattern));
+  return patterns.some((pattern) => {
+    const escaped = String(pattern).toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return new RegExp(`(^|[^a-z0-9])${escaped}($|[^a-z0-9])`).test(value);
+  });
 }
 
 function hasApproval(evidence, policy) {

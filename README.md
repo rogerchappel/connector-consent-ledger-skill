@@ -50,6 +50,19 @@ Versions before this change used substring matching. Migrate existing plans by
 changing positive free-form entries to `marker:<reference>` or an exact marker.
 Keep denial and contextual notes as separate entries; they never grant approval.
 
+### Side-effect matching
+
+Policy effects match complete, case-insensitive tokens, not arbitrary
+substrings. Non-alphanumeric separators can combine effects, so `read-only`,
+`bulk-delete`, and `crm-write:contacts` retain their canonical classifications.
+Unrelated or unknown values such as `bread` remain `ask-first`. When a value
+contains multiple effects, precedence is `blocked`, `read-only`, `draft`, then
+`ask-first`.
+
+For `review` and `summarize`, `--format` accepts only `markdown` or `json`.
+Omitting the flag uses the command default; providing the flag without a value
+or with another value exits nonzero.
+
 ## Limitations
 
 YAML support is intentionally tiny and meant for simple fixture-style plans. Use JSON for complex inputs.
