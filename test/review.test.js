@@ -14,6 +14,52 @@ test("classifies connector side effects", () => {
   assert.deepEqual(report.actions.map((action) => action.state), ["read-only", "ask-first", "approved", "blocked"]);
 });
 
+test("matches canonical and compound effects without substring collisions", () => {
+  const effects = [
+    "bread",
+    "read",
+    "read-only",
+    "bulk-delete",
+    "credential-export",
+    "crm-write:contacts",
+    "local-write/dry-run",
+    "unknown"
+  ];
+  const report = reviewPlan({
+    actions: effects.map((sideEffect) => ({ sideEffect }))
+  });
+
+  assert.deepEqual(report.actions.map((action) => action.state), [
+    "ask-first",
+    "read-only",
+    "read-only",
+    "blocked",
+    "blocked",
+    "ask-first",
+    "draft",
+    "ask-first"
+  ]);
+});
+
+test("applies blocked, read-only, draft, and ask-first precedence deterministically", () => {
+  const effects = [
+    "read/delete",
+    "draft+search",
+    "external-send,local-write",
+    "unrecognized-effect"
+  ];
+  const report = reviewPlan({
+    actions: effects.map((sideEffect) => ({ sideEffect }))
+  });
+
+  assert.deepEqual(report.actions.map((action) => action.state), [
+    "blocked",
+    "read-only",
+    "draft",
+    "ask-first"
+  ]);
+});
+
 test("requires explicit approval evidence syntax", () => {
   const evidence = [
     "approval",
