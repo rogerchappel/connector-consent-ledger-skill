@@ -6,6 +6,13 @@ import { renderReport, renderJson } from "./render.js";
 import { appendLedger, summarizeLedger } from "./ledger.js";
 import { initialPolicyJson } from "./policy.js";
 
+const usage = {
+  review: "review <action-plan> [--policy <file>] [--format <markdown|json>] [--fail-on <state>]",
+  record: "record <action-plan> --ledger <file> [--policy <file>] [--actor <name>] [--note <text>]",
+  summarize: "summarize <ledger> [--format <markdown|json>]",
+  "init-policy": "init-policy [--out <file>]"
+};
+
 const [command, ...args] = process.argv.slice(2);
 
 try {
@@ -21,9 +28,12 @@ try {
 }
 
 async function review(args) {
-  const file = args[0];
-  if (!file) throw new Error("review requires an action plan file");
-  const options = parseOptions(args.slice(1));
+  const { positionals: [file], options } = parseCommand(
+    "review",
+    args,
+    1,
+    ["policy", "format", "fail-on"]
+  );
   const policy = options.policy ? JSON.parse(await readFile(options.policy, "utf8")) : {};
   const report = reviewPlan(await readPlan(file), policy);
   process.stdout.write(renderReport(report, outputFormat(options, "markdown")));
@@ -31,40 +41,65 @@ async function review(args) {
 }
 
 async function record(args) {
-  const file = args[0];
-  if (!file) throw new Error("record requires an action plan file");
-  const options = parseOptions(args.slice(1));
-  if (!options.ledger) throw new Error("record requires --ledger <file>");
+  const { positionals: [file], options } = parseCommand(
+    "record",
+    args,
+    1,
+    ["ledger", "policy", "actor", "note"]
+  );
+  if (!options.ledger) throw usageError("record", "record requires --ledger <file>");
   const report = reviewPlan(await readPlan(file), options.policy ? JSON.parse(await readFile(options.policy, "utf8")) : {});
   const entries = await appendLedger(options.ledger, report, { actor: options.actor || "unknown", note: options.note || "" });
   process.stdout.write(renderJson({ ledger: options.ledger, appended: entries.length, entries }));
 }
 
 async function summarize(args) {
-  const file = args[0];
-  if (!file) throw new Error("summarize requires a ledger file");
-  const options = parseOptions(args.slice(1));
+  const { positionals: [file], options } = parseCommand("summarize", args, 1, ["format"]);
   const summary = await summarizeLedger(file);
   const format = outputFormat(options, "json");
   process.stdout.write(format === "markdown" ? ledgerMarkdown(summary) : JSON.stringify(summary, null, 2) + "\n");
 }
 
 async function initPolicy(args) {
-  const options = parseOptions(args);
+  const { options } = parseCommand("init-policy", args, 0, ["out"]);
   if (options.out) await writeFile(options.out, initialPolicyJson());
   else process.stdout.write(initialPolicyJson());
 }
 
-function parseOptions(args) {
+function parseCommand(command, args, positionalCount, allowedOptions) {
   const options = {};
+  const positionals = [];
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
-    if (!arg.startsWith("--")) continue;
+    if (!arg.startsWith("--")) {
+      positionals.push(arg);
+      continue;
+    }
     const key = arg.slice(2);
+    if (!allowedOptions.includes(key)) {
+      throw usageError(command, `Unknown option: ${arg}`);
+    }
+    if (Object.hasOwn(options, key)) {
+      throw usageError(command, `Option repeated: ${arg}`);
+    }
     const next = args[index + 1];
-    options[key] = next && !next.startsWith("--") ? args[++index] : true;
+    if (!next || next.startsWith("--")) {
+      const formatHint = key === "format" ? "; --format requires one of: markdown, json" : "";
+      throw usageError(command, `Option ${arg} requires a value${formatHint}`);
+    }
+    options[key] = args[++index];
   }
-  return options;
+  if (positionals.length < positionalCount) {
+    throw usageError(command, `${command} requires ${command === "summarize" ? "a ledger file" : "an action plan file"}`);
+  }
+  if (positionals.length > positionalCount) {
+    throw usageError(command, `Unexpected argument: ${positionals[positionalCount]}`);
+  }
+  return { positionals, options };
+}
+
+function usageError(command, message) {
+  return new Error(`${message}\nUsage: connector-consent-ledger ${usage[command]}`);
 }
 
 function outputFormat(options, fallback) {
