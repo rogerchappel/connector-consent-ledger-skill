@@ -63,6 +63,21 @@ For `review` and `summarize`, `--format` accepts only `markdown` or `json`.
 Omitting the flag uses the command default; providing the flag without a value
 or with another value exits nonzero.
 
+### CLI arguments
+
+Each command accepts exactly the positional arguments and options shown below:
+
+```text
+review <action-plan> [--policy <file>] [--format <markdown|json>] [--fail-on <state>]
+record <action-plan> --ledger <file> [--policy <file>] [--actor <name>] [--note <text>]
+summarize <ledger> [--format <markdown|json>]
+init-policy [--out <file>]
+```
+
+Unknown options, extra positional arguments, and options without values are
+treated as usage errors and exit nonzero. Markdown reports escape pipes and
+line breaks inside table fields; JSON output retains the original field values.
+
 ## Limitations
 
 YAML support is intentionally tiny and meant for simple fixture-style plans. Use JSON for complex inputs.

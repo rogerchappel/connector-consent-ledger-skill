@@ -11,9 +11,21 @@ export function renderMarkdown(report) {
     "| --- | --- | --- | --- | --- | --- |"
   ];
   for (const action of report.actions) {
-    lines.push(`| ${action.state} | ${action.connector} | ${action.action} | ${action.target} | ${action.reason} | ${action.evidence.join("; ") || "none"} |`);
+    const fields = [
+      action.state,
+      action.connector,
+      action.action,
+      action.target,
+      action.reason,
+      action.evidence.join("; ") || "none"
+    ].map(markdownTableField);
+    lines.push(`| ${fields.join(" | ")} |`);
   }
   return lines.join("\n") + "\n";
+}
+
+function markdownTableField(value) {
+  return String(value).replaceAll("|", "\\|").replace(/\r?\n|\r/g, "<br>");
 }
 
 export function renderJson(report) {

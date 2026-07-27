@@ -86,3 +86,37 @@ test("summarize accepts only explicit markdown and json formats", async () => {
     assert.match(error.stderr, /--format requires one of: markdown, json/);
   }
 });
+
+test("commands reject unknown options and extra positional arguments", async () => {
+  for (const args of [
+    ["review", "fixtures/mixed-actions.json", "--formt", "json"],
+    ["review", "fixtures/mixed-actions.json", "unexpected"],
+    ["record", "fixtures/mixed-actions.json", "--ledger", "ledger.jsonl", "--format", "json"],
+    ["summarize", "ledger.jsonl", "unexpected"],
+    ["init-policy", "unexpected"]
+  ]) {
+    const error = await rejectsCli(...args);
+    assert.equal(error.code, 1);
+    assert.match(error.stderr, /(?:Unknown option|Unexpected argument):/);
+    assert.match(error.stderr, /Usage:/);
+  }
+});
+
+test("value-bearing options reject missing values", async () => {
+  const cases = [
+    ["review", "fixtures/mixed-actions.json", "--policy"],
+    ["record", "fixtures/mixed-actions.json", "--ledger"],
+    ["record", "fixtures/mixed-actions.json", "--actor"],
+    ["record", "fixtures/mixed-actions.json", "--note"],
+    ["init-policy", "--out"],
+    ["review", "fixtures/mixed-actions.json", "--format"],
+    ["review", "fixtures/mixed-actions.json", "--fail-on"]
+  ];
+
+  for (const args of cases) {
+    const error = await rejectsCli(...args);
+    assert.equal(error.code, 1);
+    assert.match(error.stderr, /Option --[\w-]+ requires a value/);
+    assert.match(error.stderr, /Usage:/);
+  }
+});
