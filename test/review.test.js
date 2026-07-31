@@ -101,6 +101,12 @@ test("parses simple yaml action lists", () => {
   assert.equal(plan.actions[0].connector, "browser");
 });
 
+test("review rejects an unvalidated plan shape and represents empty plans explicitly", () => {
+  assert.throws(() => reviewPlan({ actons: [] }), /unrecognized plan object/);
+  const report = reviewPlan({ actions: [] });
+  assert.deepEqual(report.summary, { total: 0, counts: {}, highestState: "none" });
+});
+
 test("renders markdown evidence table", () => {
   const report = reviewPlan({ actions: [{ connector: "fs", action: "draft", sideEffect: "local-write" }] });
   assert.match(renderMarkdown(report), /\| draft \| fs \| draft/);

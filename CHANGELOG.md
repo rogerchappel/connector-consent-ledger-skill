@@ -9,6 +9,9 @@
   without classifying unrelated words such as `bread` as read-only.
 - Reject missing and unsupported explicit output formats for review and summary
   commands with a clear nonzero error.
+- Validate plan roots and action collections before review or recording, reject
+  blank and malformed plans, and report explicit empty plans with the
+  non-action state `none`.
 
 ## 0.1.0
 

@@ -7,19 +7,56 @@ export async function readPlan(file) {
 
 export function parsePlanText(text, label = "input") {
   const trimmed = text.trim();
-  if (!trimmed) return { actions: [] };
-  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+  if (!trimmed) throw planError(label, "plan is blank");
+  if (/^(?:[\[{"\d-]|null\b|true\b|false\b)/.test(trimmed)) {
     const parsed = JSON.parse(trimmed);
-    return normalizePlan(parsed);
+    return normalizePlan(parsed, label);
   }
-  return normalizePlan(parseTinyYaml(trimmed, label));
+  return normalizePlan(parseTinyYaml(trimmed, label), label);
 }
 
-export function normalizePlan(plan) {
-  if (Array.isArray(plan)) return { actions: plan };
-  if (Array.isArray(plan.actions)) return plan;
-  if (plan.action || plan.connector) return { actions: [plan] };
-  return { ...plan, actions: [] };
+export function normalizePlan(plan, label = "input") {
+  if (Array.isArray(plan)) return validatedPlan({ actions: plan }, label);
+  if (!isObject(plan)) {
+    throw planError(label, "plan root must be an object or array");
+  }
+  if (Object.hasOwn(plan, "actions")) {
+    if (!Array.isArray(plan.actions)) {
+      throw planError(label, "actions must be an array");
+    }
+    return validatedPlan(plan, label);
+  }
+  if (hasRecognizedActionField(plan)) {
+    return validatedPlan({ actions: [plan] }, label);
+  }
+  throw planError(label, "unrecognized plan object; expected an actions array, an action array, or a single action object");
+}
+
+function validatedPlan(plan, label) {
+  plan.actions.forEach((action, index) => {
+    if (!isObject(action)) {
+      throw planError(label, `actions[${index}] must be an object`);
+    }
+    if (!hasRecognizedActionField(action)) {
+      throw planError(label, `actions[${index}] has no recognized action fields`);
+    }
+  });
+  return plan;
+}
+
+function isObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasRecognizedActionField(action) {
+  return [
+    "id", "connector", "action", "operation", "target", "sideEffect",
+    "side_effect", "effect", "risk", "state", "evidence"
+  ].some((field) => Object.hasOwn(action, field));
+}
+
+function planError(label, message) {
+  return new Error(`${label}: ${message}`);
 }
 
 function parseTinyYaml(text, label) {

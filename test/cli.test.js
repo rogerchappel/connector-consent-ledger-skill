@@ -120,3 +120,30 @@ test("value-bearing options reject missing values", async () => {
     assert.match(error.stderr, /Usage:/);
   }
 });
+
+test("review and record reject invalid plans before producing output", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "consent-ledger-invalid-plan-"));
+  const ledger = join(directory, "ledger.jsonl");
+  const cases = [
+    ["blank.yaml", ""],
+    ["misspelled.json", '{"actons":[{"connector":"crm","action":"send"}]}'],
+    ["malformed.json", '{"actions":[null]}'],
+    ["null.json", "null"]
+  ];
+
+  for (const [name, contents] of cases) {
+    const plan = join(directory, name);
+    await writeFile(plan, contents);
+    for (const args of [
+      ["review", plan, "--format", "json"],
+      ["record", plan, "--ledger", ledger]
+    ]) {
+      const error = await rejectsCli(...args);
+      assert.equal(error.code, 1);
+      assert.equal(error.stdout, "");
+      assert.match(error.stderr, /(?:plan is blank|unrecognized plan object|must be an object)/);
+    }
+  }
+
+  await assert.rejects(readFile(ledger, "utf8"), { code: "ENOENT" });
+});
