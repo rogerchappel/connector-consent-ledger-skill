@@ -1,8 +1,10 @@
 import { mergePolicy } from "./policy.js";
+import { normalizePlan } from "./parse.js";
 
 export function reviewPlan(plan, policyInput = {}) {
+  plan = normalizePlan(plan);
   const policy = mergePolicy(policyInput);
-  const actions = (plan.actions || []).map((action, index) => classifyAction(action, index, policy));
+  const actions = plan.actions.map((action, index) => classifyAction(action, index, policy));
   const counts = actions.reduce((acc, action) => {
     acc[action.state] = (acc[action.state] || 0) + 1;
     return acc;
@@ -74,5 +76,5 @@ function normalizeEvidence(value) {
 
 function highestState(actions) {
   const rank = ["read-only", "draft", "approved", "ask-first", "blocked"];
-  return actions.map((a) => a.state).sort((a, b) => rank.indexOf(b) - rank.indexOf(a))[0] || "read-only";
+  return actions.map((a) => a.state).sort((a, b) => rank.indexOf(b) - rank.indexOf(a))[0] || "none";
 }
