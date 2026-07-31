@@ -30,6 +30,20 @@ npm pack --dry-run
 
 The CLI never calls Slack, CRMs, browsers, project-management systems, or MCP servers. `review` is read-only. `record` only appends local JSONL entries to the path you provide.
 
+### Action plan shapes
+
+JSON and YAML plans may use an object with an `actions` array. JSON also accepts
+a root action array or a single action object. Each action must be an object
+containing at least one recognized action field such as `connector`, `action`,
+`operation`, `target`, `sideEffect`, `effect`, `risk`, or `evidence`.
+
+Blank files, `null` or scalar roots, unknown objects, non-array `actions`
+properties, and malformed action entries are rejected before review or ledger
+recording. An intentionally empty plan must therefore be explicit as
+`{"actions":[]}` (or `[]` in JSON; `actions: []` in YAML is not supported by
+the tiny YAML subset). Its report has `total: 0` and `highestState: "none"`; an
+empty plan is never described as read-only.
+
 ### Approval evidence syntax
 
 Ask-first actions become `approved` only when one evidence array entry is either
