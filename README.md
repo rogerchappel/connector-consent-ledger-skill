@@ -77,6 +77,11 @@ For `review` and `summarize`, `--format` accepts only `markdown` or `json`.
 Omitting the flag uses the command default; providing the flag without a value
 or with another value exits nonzero.
 
+For `review`, `--fail-on` accepts exactly `read-only`, `draft`, `approved`,
+`ask-first`, or `blocked` (lowercase). The command exits `2` when any reviewed
+action has the selected state and otherwise exits `0`. A missing, unknown, or
+case-mismatched value is a usage error that exits `1` before rendering a report.
+
 ### CLI arguments
 
 Each command accepts exactly the positional arguments and options shown below:
