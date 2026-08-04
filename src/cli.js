@@ -12,6 +12,7 @@ const usage = {
   summarize: "summarize <ledger> [--format <markdown|json>]",
   "init-policy": "init-policy [--out <file>]"
 };
+const consentStates = ["read-only", "draft", "approved", "ask-first", "blocked"];
 
 const [command, ...args] = process.argv.slice(2);
 
@@ -34,10 +35,17 @@ async function review(args) {
     1,
     ["policy", "format", "fail-on"]
   );
+  validateFailOn(options["fail-on"]);
   const policy = options.policy ? JSON.parse(await readFile(options.policy, "utf8")) : {};
   const report = reviewPlan(await readPlan(file), policy);
   process.stdout.write(renderReport(report, outputFormat(options, "markdown")));
   failOn(report, options["fail-on"]);
+}
+
+function validateFailOn(state) {
+  if (state !== undefined && !consentStates.includes(state)) {
+    throw usageError("review", `--fail-on requires one of: ${consentStates.join(", ")}`);
+  }
 }
 
 async function record(args) {
