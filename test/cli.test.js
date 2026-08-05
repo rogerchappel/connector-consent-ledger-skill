@@ -121,6 +121,40 @@ test("value-bearing options reject missing values", async () => {
   }
 });
 
+test("review --fail-on exits 2 for every supported consent state", async () => {
+  for (const state of ["read-only", "draft", "approved", "ask-first", "blocked"]) {
+    const error = await rejectsCli("review", "fixtures/mixed-actions.json", "--fail-on", state);
+    assert.equal(error.code, 2, state);
+    assert.match(error.stdout, /^# Connector Consent Report/, state);
+    assert.equal(error.stderr, "", state);
+  }
+});
+
+test("review --fail-on exits 0 when the selected state is absent", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "consent-ledger-fail-on-test-"));
+  const plan = join(directory, "read-only.json");
+  await writeFile(plan, JSON.stringify({ actions: [{ sideEffect: "read" }] }));
+
+  const result = await runCli("review", plan, "--fail-on", "blocked");
+  assert.equal(result.stderr, "");
+  assert.match(result.stdout, /Highest state: read-only/);
+});
+
+test("review --fail-on rejects unknown and case-mismatched states before rendering", async () => {
+  for (const state of ["blockd", "Blocked", "none", ""]) {
+    const args = state
+      ? ["review", "fixtures/mixed-actions.json", "--fail-on", state]
+      : ["review", "fixtures/mixed-actions.json", "--fail-on"];
+    const error = await rejectsCli(...args);
+    assert.equal(error.code, 1, state);
+    assert.equal(error.stdout, "", state);
+    assert.match(error.stderr, state
+      ? /--fail-on requires one of: read-only, draft, approved, ask-first, blocked/
+      : /Option --fail-on requires a value/);
+    assert.match(error.stderr, /Usage:/);
+  }
+});
+
 test("review and record reject invalid plans before producing output", async () => {
   const directory = await mkdtemp(join(tmpdir(), "consent-ledger-invalid-plan-"));
   const ledger = join(directory, "ledger.jsonl");

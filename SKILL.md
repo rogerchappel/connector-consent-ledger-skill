@@ -22,6 +22,9 @@ Use this skill when an agent has a planned connector action and must prove what 
   precedence is blocked, read-only, draft, then ask-first.
 - `review` and `summarize` accept only `markdown` or `json` as explicit
   `--format` values.
+- `review --fail-on` accepts exactly `read-only`, `draft`, `approved`,
+  `ask-first`, or `blocked`. It exits `2` when the selected state is present,
+  `0` when absent, and `1` for a missing or unsupported value.
 
 ## Workflow
 
