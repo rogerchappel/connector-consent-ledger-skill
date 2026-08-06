@@ -181,3 +181,39 @@ test("review and record reject invalid plans before producing output", async () 
 
   await assert.rejects(readFile(ledger, "utf8"), { code: "ENOENT" });
 });
+
+test("review and record reject invalid policies before output or ledger append", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "consent-ledger-invalid-policy-"));
+  const ledger = join(directory, "ledger.jsonl");
+  const cases = [
+    ["scalar.json", '"policy"', /policy must be an object/],
+    ["wrong-shape.json", '{"blockedEffects":"delete"}', /policy\.blockedEffects must be an array/],
+    ["empty-entry.json", '{"approvalEvidence":[""]}', /policy\.approvalEvidence\[0\] must be a non-empty string/],
+    ["unknown.json", '{"blockedEffect":["delete"]}', /unknown policy property: blockedEffect/i]
+  ];
+
+  for (const [name, contents, message] of cases) {
+    const policy = join(directory, name);
+    await writeFile(policy, contents);
+    for (const args of [
+      ["review", "fixtures/mixed-actions.json", "--policy", policy, "--format", "json"],
+      ["record", "fixtures/mixed-actions.json", "--policy", policy, "--ledger", ledger]
+    ]) {
+      const error = await rejectsCli(...args);
+      assert.equal(error.code, 1);
+      assert.equal(error.stdout, "");
+      assert.match(error.stderr, message);
+    }
+  }
+
+  await assert.rejects(readFile(ledger, "utf8"), { code: "ENOENT" });
+});
+
+test("init-policy emits a policy accepted by review", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "consent-ledger-init-policy-"));
+  const policy = join(directory, "policy.json");
+  await runCli("init-policy", "--out", policy);
+
+  const result = await runCli("review", "fixtures/mixed-actions.json", "--policy", policy, "--format", "json");
+  assert.equal(JSON.parse(result.stdout).summary.total, 5);
+});

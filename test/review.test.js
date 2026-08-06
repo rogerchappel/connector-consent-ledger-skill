@@ -96,6 +96,36 @@ test("checks array entries independently and supports custom policy markers", ()
   assert.deepEqual(approved.actions[0].evidence, ["context only", " CHANGE-CONTROL: CAB-19 "]);
 });
 
+test("accepts supported custom policy overrides", () => {
+  const report = reviewPlan({
+    actions: [
+      { sideEffect: "quarantine" },
+      { sideEffect: "publish", evidence: "cab:CAB-19" }
+    ]
+  }, {
+    blockedEffects: ["quarantine"],
+    askFirstEffects: ["publish"],
+    approvalEvidence: ["cab"]
+  });
+
+  assert.deepEqual(report.actions.map((action) => action.state), ["blocked", "approved"]);
+});
+
+test("rejects malformed and unknown custom policy properties", () => {
+  for (const [policy, message] of [
+    [null, "policy must be an object"],
+    [[], "policy must be an object"],
+    [{ blockedEffects: "delete" }, "policy.blockedEffects must be an array"],
+    [{ readOnlyEffects: ["read", 42] }, "policy.readOnlyEffects[1] must be a non-empty string"],
+    [{ approvalEvidence: ["approval", " "] }, "policy.approvalEvidence[1] must be a non-empty string"],
+    [{ unknownEffects: ["write"] }, "unknown policy property: unknownEffects"]
+  ]) {
+    assert.throws(() => reviewPlan({ actions: [] }, policy), (error) =>
+      error.message.toLowerCase() === message.toLowerCase()
+    );
+  }
+});
+
 test("parses simple yaml action lists", () => {
   const plan = parsePlanText("name: demo\nactions:\n  - connector: browser\n    action: inspect\n    sideEffect: read\n");
   assert.equal(plan.actions[0].connector, "browser");
