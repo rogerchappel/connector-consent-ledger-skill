@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Validate custom policy objects and their supported array properties before
+  review output or ledger writes, with property-specific errors.
 - Validate `review --fail-on` consent states before rendering so typos cannot
   silently disable automation gates, with explicit exit-code behavior.
 - Add release-readiness checks for package metadata, pack contents, and CI verification.

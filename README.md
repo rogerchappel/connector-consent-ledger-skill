@@ -60,6 +60,30 @@ default policy, `approval` and `ticket:CAB-19` are accepted; free-form text such
 as `approval denied`, `disapproval recorded`, and `approval ticket #42` is not.
 Custom `approvalEvidence` markers follow the same syntax.
 
+### Custom policy shape
+
+A policy file must contain one JSON object. It may override only these generated
+properties, and every supplied value must be an array whose entries are
+non-empty strings:
+
+- `blockedEffects`
+- `askFirstEffects`
+- `draftEffects`
+- `readOnlyEffects`
+- `approvalEvidence`
+- `states`
+
+Effect arrays replace the corresponding defaults used for classification, and
+`approvalEvidence` replaces the default approval markers. `states` records the
+fixed output-state vocabulary emitted by `init-policy`; changing it does not add
+new classification states. Empty arrays are allowed when a category should have
+no matches. Unknown properties, non-object policy roots, non-array overrides,
+and blank or non-string array entries are rejected before review output or a
+ledger append.
+
+Run `node src/cli.js init-policy --out consent.policy.json` to generate a valid
+policy containing every supported property.
+
 Versions before this change used substring matching. Migrate existing plans by
 changing positive free-form entries to `marker:<reference>` or an exact marker.
 Keep denial and contextual notes as separate entries; they never grant approval.

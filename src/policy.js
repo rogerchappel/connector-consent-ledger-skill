@@ -8,7 +8,30 @@ export const defaultPolicy = {
 };
 
 export function mergePolicy(policy = {}) {
+  validatePolicy(policy);
   return { ...defaultPolicy, ...policy };
+}
+
+export function validatePolicy(policy) {
+  if (policy === null || typeof policy !== "object" || Array.isArray(policy)) {
+    throw new Error("policy must be an object");
+  }
+
+  for (const property of Object.keys(policy)) {
+    if (!Object.hasOwn(defaultPolicy, property)) {
+      throw new Error(`Unknown policy property: ${property}`);
+    }
+
+    const values = policy[property];
+    if (!Array.isArray(values)) {
+      throw new Error(`policy.${property} must be an array`);
+    }
+    values.forEach((value, index) => {
+      if (typeof value !== "string" || value.trim() === "") {
+        throw new Error(`policy.${property}[${index}] must be a non-empty string`);
+      }
+    });
+  }
 }
 
 export function initialPolicyJson() {
