@@ -123,7 +123,14 @@ line breaks inside table fields; JSON output retains the original field values.
 
 ## Limitations
 
-YAML support is intentionally tiny and meant for simple fixture-style plans. Use JSON for complex inputs.
+YAML support is intentionally tiny and meant for simple fixture-style plans. It
+accepts top-level scalar properties and one top-level list of flat mappings.
+Scalar values may be unquoted or wrapped in matching single or double quotes;
+the surrounding quotes are removed, but YAML escape sequences are not decoded.
+A `#` starts an inline comment only when it is outside quotes and preceded by
+whitespace. Hash characters inside either kind of quoted scalar are preserved.
+Blank lines and comment-only lines are ignored. Use JSON for complex inputs,
+nested structures, flow collections, block scalars, anchors, or tags.
 
 ## Release Verification
 
