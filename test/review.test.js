@@ -131,6 +131,27 @@ test("parses simple yaml action lists", () => {
   assert.equal(plan.actions[0].connector, "browser");
 });
 
+test("preserves hashes in quoted yaml scalars and strips genuine comments", () => {
+  const plan = parsePlanText(`name: "demo #1" # plan comment
+actions:
+  - connector: crm # connector comment
+    action: update
+    sideEffect: crm-write
+    evidence: "approval: ticket #42" # evidence comment
+  - connector: 'support #2'
+    action: update
+    sideEffect: crm-write
+    evidence: 'approval: case #7' # another comment
+`);
+
+  assert.equal(plan.name, "demo #1");
+  assert.deepEqual(plan.actions.map((action) => action.connector), ["crm", "support #2"]);
+  assert.deepEqual(plan.actions.map((action) => action.evidence), [
+    "approval: ticket #42",
+    "approval: case #7"
+  ]);
+});
+
 test("review rejects an unvalidated plan shape and represents empty plans explicitly", () => {
   assert.throws(() => reviewPlan({ actons: [] }), /unrecognized plan object/);
   const report = reviewPlan({ actions: [] });

@@ -67,6 +67,22 @@ test("review accepts only explicit markdown and json formats", async () => {
   }
 });
 
+test("review preserves quoted hash evidence in yaml plans", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "consent-ledger-yaml-test-"));
+  const plan = join(directory, "plan.yaml");
+  await writeFile(plan, `actions:
+  - connector: crm # genuine comment
+    action: update
+    sideEffect: crm-write
+    evidence: "approval: ticket #42" # genuine comment
+`);
+
+  const { stdout } = await runCli("review", plan, "--format", "json");
+  const report = JSON.parse(stdout);
+  assert.equal(report.actions[0].state, "approved");
+  assert.deepEqual(report.actions[0].evidence, ["approval: ticket #42"]);
+});
+
 test("summarize accepts only explicit markdown and json formats", async () => {
   const directory = await mkdtemp(join(tmpdir(), "consent-ledger-summary-test-"));
   const ledger = join(directory, "ledger.jsonl");
