@@ -65,7 +65,7 @@ function parseTinyYaml(text, label) {
   let currentKey = null;
   let currentItem = null;
   for (const raw of lines) {
-    const line = raw.replace(/\s+#.*$/, "");
+    const line = stripYamlComment(raw);
     if (!line.trim()) continue;
     const keyMatch = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
     if (keyMatch && !raw.startsWith(" ")) {
@@ -91,6 +91,33 @@ function parseTinyYaml(text, label) {
     throw new Error(`Unsupported YAML shape in ${label}: ${raw}`);
   }
   return root;
+}
+
+function stripYamlComment(line) {
+  let quote = null;
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    if (quote === '"' && character === "\\") {
+      index += 1;
+      continue;
+    }
+    if (character === quote) {
+      if (quote === "'" && line[index + 1] === "'") {
+        index += 1;
+      } else {
+        quote = null;
+      }
+      continue;
+    }
+    if (!quote && (character === '"' || character === "'")) {
+      quote = character;
+      continue;
+    }
+    if (!quote && character === "#" && index > 0 && /\s/.test(line[index - 1])) {
+      return line.slice(0, index).trimEnd();
+    }
+  }
+  return line;
 }
 
 function scalar(value) {
