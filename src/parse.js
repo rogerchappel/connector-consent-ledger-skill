@@ -40,6 +40,9 @@ function validatedPlan(plan, label) {
     if (!hasRecognizedActionField(action)) {
       throw planError(label, `actions[${index}] has no recognized action fields`);
     }
+    if (Object.hasOwn(action, "state") && action.state !== "blocked") {
+      throw planError(label, `actions[${index}].state must be exactly "blocked"`);
+    }
   });
   return plan;
 }
