@@ -14,6 +14,26 @@ test("classifies connector side effects", () => {
   assert.deepEqual(report.actions.map((action) => action.state), ["read-only", "ask-first", "approved", "blocked"]);
 });
 
+test("an explicit blocked state overrides a read-like side effect consistently", () => {
+  const report = reviewPlan({ actions: [
+    { id: "explicit-block", connector: "crm", action: "inspect", sideEffect: "read", state: "blocked" }
+  ] });
+
+  assert.deepEqual(report.summary, { total: 1, counts: { blocked: 1 }, highestState: "blocked" });
+  assert.equal(report.actions[0].state, "blocked");
+  assert.equal(report.actions[0].reason, "Plan explicitly marks this action as blocked.");
+  assert.match(renderMarkdown(report), /\| blocked \| crm \| inspect \| unspecified \| Plan explicitly marks this action as blocked\. \|/);
+});
+
+test("rejects unsupported or malformed explicit states", () => {
+  for (const state of ["read-only", "Blocked", "", null, 42]) {
+    assert.throws(
+      () => reviewPlan({ actions: [{ sideEffect: "read", state }] }),
+      /actions\[0\]\.state must be exactly "blocked"/
+    );
+  }
+});
+
 test("matches canonical and compound effects without substring collisions", () => {
   const effects = [
     "bread",
