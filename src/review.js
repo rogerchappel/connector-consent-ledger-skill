@@ -35,7 +35,10 @@ export function classifyAction(action, index, policy) {
     state = hasApproval(evidence, policy) ? "approved" : "ask-first";
     reason = state === "approved" ? "Approval evidence is attached for this external side effect." : "External side effect needs explicit approval evidence.";
   }
-  if (action.state === "blocked") state = "blocked";
+  if (action.state === "blocked") {
+    state = "blocked";
+    reason = "Plan explicitly marks this action as blocked.";
+  }
   return {
     id: action.id || `${action.connector || "connector"}-${index + 1}`,
     connector: action.connector || "unknown",

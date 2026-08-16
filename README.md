@@ -35,7 +35,22 @@ The CLI never calls Slack, CRMs, browsers, project-management systems, or MCP se
 JSON and YAML plans may use an object with an `actions` array. JSON also accepts
 a root action array or a single action object. Each action must be an object
 containing at least one recognized action field such as `connector`, `action`,
-`operation`, `target`, `sideEffect`, `effect`, `risk`, or `evidence`.
+`operation`, `target`, `sideEffect`, `effect`, `risk`, `state`, or `evidence`.
+
+An action may set `"state": "blocked"` to explicitly prevent it regardless of
+its side-effect classification. This exact lowercase value is the only
+supported input-state override; the report uses a blocked-specific reason and
+includes the action in its blocked count and highest state. Other strings,
+different casing, blank values, and non-string values are rejected instead of
+being silently ignored:
+
+```json
+{
+  "actions": [
+    { "connector": "crm", "action": "inspect", "sideEffect": "read", "state": "blocked" }
+  ]
+}
+```
 
 Blank files, `null` or scalar roots, unknown objects, non-array `actions`
 properties, and malformed action entries are rejected before review or ledger
