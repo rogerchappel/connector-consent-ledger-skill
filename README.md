@@ -37,6 +37,15 @@ a root action array or a single action object. Each action must be an object
 containing at least one recognized action field such as `connector`, `action`,
 `operation`, `target`, `sideEffect`, `effect`, `risk`, `state`, or `evidence`.
 
+When present, `id`, `connector`, `action`, `operation`, `target`, and the
+side-effect aliases `sideEffect`, `side_effect`, `effect`, and `risk` must each
+be a non-empty string. `evidence` must be either one non-empty string or an
+array of non-empty strings; an empty array is allowed when no evidence is
+attached. Validation errors identify the exact field, such as
+`actions[2].target` or `actions[0].evidence[1]`. Numbers, booleans, objects,
+arrays in scalar fields, and blank strings are rejected before report output
+or any ledger append.
+
 An action may set `"state": "blocked"` to explicitly prevent it regardless of
 its side-effect classification. This exact lowercase value is the only
 supported input-state override; the report uses a blocked-specific reason and

@@ -198,6 +198,34 @@ test("review and record reject invalid plans before producing output", async () 
   await assert.rejects(readFile(ledger, "utf8"), { code: "ENOENT" });
 });
 
+test("record leaves an existing ledger unchanged for malformed action fields", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "consent-ledger-action-schema-"));
+  const ledger = join(directory, "ledger.jsonl");
+  const original = `${JSON.stringify({ id: "existing", state: "draft" })}\n`;
+  await writeFile(ledger, original);
+
+  const cases = [
+    ["invalid.json", JSON.stringify({ actions: [{ connector: "crm", action: {}, evidence: ["ticket:42"] }] }), /actions\[0\]\.action/],
+    ["invalid.yaml", "actions:\n  - connector: crm\n    action: update\n    target: false\n", /actions\[0\]\.target/],
+    ["evidence.json", JSON.stringify({ actions: [{ connector: "crm", evidence: ["ticket:42", ""] }] }), /actions\[0\]\.evidence\[1\]/]
+  ];
+
+  for (const [name, contents, message] of cases) {
+    const plan = join(directory, name);
+    await writeFile(plan, contents);
+    for (const command of ["review", "record"]) {
+      const args = command === "review"
+        ? [command, plan, "--format", "json"]
+        : [command, plan, "--ledger", ledger];
+      const error = await rejectsCli(...args);
+      assert.equal(error.code, 1);
+      assert.equal(error.stdout, "");
+      assert.match(error.stderr, message);
+      assert.equal(await readFile(ledger, "utf8"), original);
+    }
+  }
+});
+
 test("review and record reject invalid policies before output or ledger append", async () => {
   const directory = await mkdtemp(join(tmpdir(), "consent-ledger-invalid-policy-"));
   const ledger = join(directory, "ledger.jsonl");

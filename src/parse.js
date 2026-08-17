@@ -40,11 +40,43 @@ function validatedPlan(plan, label) {
     if (!hasRecognizedActionField(action)) {
       throw planError(label, `actions[${index}] has no recognized action fields`);
     }
+    for (const field of ACTION_STRING_FIELDS) {
+      if (Object.hasOwn(action, field)) {
+        validateNonEmptyString(action[field], label, `actions[${index}].${field}`);
+      }
+    }
+    if (Object.hasOwn(action, "evidence")) {
+      validateEvidence(action.evidence, label, `actions[${index}].evidence`);
+    }
     if (Object.hasOwn(action, "state") && action.state !== "blocked") {
       throw planError(label, `actions[${index}].state must be exactly "blocked"`);
     }
   });
   return plan;
+}
+
+const ACTION_STRING_FIELDS = [
+  "id", "connector", "action", "operation", "target", "sideEffect",
+  "side_effect", "effect", "risk"
+];
+
+function validateNonEmptyString(value, label, path) {
+  if (typeof value !== "string" || !value.trim()) {
+    throw planError(label, `${path} must be a non-empty string`);
+  }
+}
+
+function validateEvidence(value, label, path) {
+  if (typeof value === "string") {
+    if (!value.trim()) {
+      throw planError(label, `${path} must be a non-empty string or an array of non-empty strings`);
+    }
+    return;
+  }
+  if (!Array.isArray(value)) {
+    throw planError(label, `${path} must be a non-empty string or an array of non-empty strings`);
+  }
+  value.forEach((entry, index) => validateNonEmptyString(entry, label, `${path}[${index}]`));
 }
 
 function isObject(value) {
