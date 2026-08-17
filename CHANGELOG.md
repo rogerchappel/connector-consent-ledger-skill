@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Enforce non-empty string action fields and string evidence values with exact
+  action paths before review output or ledger writes.
 - Validate custom policy objects and their supported array properties before
   review output or ledger writes, with property-specific errors.
 - Validate `review --fail-on` consent states before rendering so typos cannot
