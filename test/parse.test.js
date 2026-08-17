@@ -29,3 +29,48 @@ test("rejects malformed action collections and entries", () => {
   assert.throws(() => normalizePlan({ actions: ["send"] }), /actions\[0\] must be an object/);
   assert.throws(() => normalizePlan({ actions: [{}] }), /actions\[0\] has no recognized action fields/);
 });
+
+test("rejects malformed action field values with exact paths", () => {
+  const fields = [
+    "id", "connector", "action", "operation", "target", "sideEffect",
+    "side_effect", "effect", "risk"
+  ];
+  for (const field of fields) {
+    for (const value of ["", "  ", 42, false, null, {}, []]) {
+      assert.throws(
+        () => normalizePlan({ actions: [{ [field]: value }] }),
+        new RegExp(`actions\\[0\\]\\.${field} must be a non-empty string`)
+      );
+    }
+  }
+});
+
+test("accepts documented evidence forms and rejects malformed entries", () => {
+  assert.deepEqual(normalizePlan({ actions: [{ evidence: "ticket:42" }] }).actions[0].evidence, "ticket:42");
+  assert.deepEqual(normalizePlan({ actions: [{ evidence: [] }] }).actions[0].evidence, []);
+  assert.deepEqual(normalizePlan({ actions: [{ evidence: ["ticket:42"] }] }).actions[0].evidence, ["ticket:42"]);
+
+  for (const value of ["", " ", 42, false, null, {}]) {
+    assert.throws(
+      () => normalizePlan({ actions: [{ evidence: value }] }),
+      /actions\[0\]\.evidence must be a non-empty string or an array of non-empty strings/
+    );
+  }
+  for (const value of ["", " ", 42, false, null, {}]) {
+    assert.throws(
+      () => normalizePlan({ actions: [{ evidence: ["ticket:42", value] }] }),
+      /actions\[0\]\.evidence\[1\] must be a non-empty string/
+    );
+  }
+});
+
+test("tiny YAML rejects malformed scalar action fields with exact paths", () => {
+  assert.throws(
+    () => parsePlanText("actions:\n  - connector: false\n    action: inspect", "plan.yaml"),
+    /plan\.yaml: actions\[0\]\.connector must be a non-empty string/
+  );
+  assert.throws(
+    () => parsePlanText("actions:\n  - connector: crm\n    evidence: 42", "plan.yaml"),
+    /plan\.yaml: actions\[0\]\.evidence must be a non-empty string or an array of non-empty strings/
+  );
+});
