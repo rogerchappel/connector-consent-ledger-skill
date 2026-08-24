@@ -99,6 +99,7 @@ function parseTinyYaml(text, label) {
   const root = {};
   let currentKey = null;
   let currentItem = null;
+  let nestedSequence = null;
   for (const raw of lines) {
     const line = stripYamlComment(raw);
     if (!line.trim()) continue;
@@ -110,17 +111,31 @@ function parseTinyYaml(text, label) {
         root[key] = [];
         currentKey = key;
       }
+      nestedSequence = null;
+      continue;
+    }
+    const nestedItemMatch = line.match(/^(\s+)-(?:\s(.*))?$/);
+    if (nestedItemMatch && nestedSequence && nestedItemMatch[1].length > nestedSequence.indent) {
+      currentItem[nestedSequence.key].push(scalar(nestedItemMatch[2] ?? ""));
       continue;
     }
     const itemMatch = line.match(/^\s*-\s*([A-Za-z0-9_-]+):\s*(.*)$/);
     if (itemMatch && currentKey) {
       currentItem = { [itemMatch[1]]: scalar(itemMatch[2]) };
       root[currentKey].push(currentItem);
+      nestedSequence = null;
       continue;
     }
-    const propMatch = line.match(/^\s+([A-Za-z0-9_-]+):\s*(.*)$/);
+    const propMatch = line.match(/^(\s+)([A-Za-z0-9_-]+):\s*(.*)$/);
     if (propMatch && currentItem) {
-      currentItem[propMatch[1]] = scalar(propMatch[2]);
+      const [, indent, key, value] = propMatch;
+      if (value) {
+        currentItem[key] = scalar(value);
+        nestedSequence = null;
+      } else {
+        currentItem[key] = [];
+        nestedSequence = { key, indent: indent.length };
+      }
       continue;
     }
     throw new Error(`Unsupported YAML shape in ${label}: ${raw}`);

@@ -229,8 +229,8 @@ test("record leaves an existing ledger unchanged for malformed action fields", a
   const cases = [
     ["invalid.json", JSON.stringify({ actions: [{ connector: "crm", action: {}, evidence: ["ticket:42"] }] }), /actions\[0\]\.action/],
     ["invalid.yaml", "actions:\n  - connector: crm\n    action: update\n    target: false\n", /actions\[0\]\.target/],
-    ["evidence.json", JSON.stringify({ actions: [{ connector: "crm", evidence: ["ticket:42", ""] }] }), /actions\[0\]\.evidence\[1\]/]
-    , ["evidence.yaml", "actions:\n  - connector: crm\n    evidence:\n      - ticket:42\n      - false\n", /actions\[0\]\.evidence\[1\]/]
+    ["evidence.json", JSON.stringify({ actions: [{ connector: "crm", evidence: ["ticket:42", ""] }] }), /actions\[0\]\.evidence\[1\]/],
+    ["evidence.yaml", "actions:\n  - connector: crm\n    evidence:\n      - ticket:42\n      - false\n", /actions\[0\]\.evidence\[1\]/]
   ];
 
   for (const [name, contents, message] of cases) {
