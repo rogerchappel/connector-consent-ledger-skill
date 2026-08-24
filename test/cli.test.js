@@ -83,6 +83,28 @@ test("review preserves quoted hash evidence in yaml plans", async () => {
   assert.deepEqual(report.actions[0].evidence, ["approval: ticket #42"]);
 });
 
+test("review and record preserve YAML evidence arrays", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "consent-ledger-yaml-evidence-"));
+  const plan = join(directory, "plan.yaml");
+  const ledger = join(directory, "ledger.jsonl");
+  await writeFile(plan, `actions:
+  - connector: crm
+    action: update
+    sideEffect: crm-write
+    evidence:
+      - context:change-window
+      - approval:ticket-42
+`);
+
+  const reviewed = JSON.parse((await runCli("review", plan, "--format", "json")).stdout);
+  assert.deepEqual(reviewed.actions[0].evidence, ["context:change-window", "approval:ticket-42"]);
+  assert.equal(reviewed.actions[0].state, "approved");
+
+  await runCli("record", plan, "--ledger", ledger);
+  const recorded = JSON.parse((await readFile(ledger, "utf8")).trim());
+  assert.deepEqual(recorded.evidence, ["context:change-window", "approval:ticket-42"]);
+});
+
 test("summarize accepts only explicit markdown and json formats", async () => {
   const directory = await mkdtemp(join(tmpdir(), "consent-ledger-summary-test-"));
   const ledger = join(directory, "ledger.jsonl");
@@ -208,6 +230,7 @@ test("record leaves an existing ledger unchanged for malformed action fields", a
     ["invalid.json", JSON.stringify({ actions: [{ connector: "crm", action: {}, evidence: ["ticket:42"] }] }), /actions\[0\]\.action/],
     ["invalid.yaml", "actions:\n  - connector: crm\n    action: update\n    target: false\n", /actions\[0\]\.target/],
     ["evidence.json", JSON.stringify({ actions: [{ connector: "crm", evidence: ["ticket:42", ""] }] }), /actions\[0\]\.evidence\[1\]/]
+    , ["evidence.yaml", "actions:\n  - connector: crm\n    evidence:\n      - ticket:42\n      - false\n", /actions\[0\]\.evidence\[1\]/]
   ];
 
   for (const [name, contents, message] of cases) {

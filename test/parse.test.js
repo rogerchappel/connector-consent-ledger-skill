@@ -74,3 +74,29 @@ test("tiny YAML rejects malformed scalar action fields with exact paths", () => 
     /plan\.yaml: actions\[0\]\.evidence must be a non-empty string or an array of non-empty strings/
   );
 });
+
+test("tiny YAML preserves nested evidence sequences in order", () => {
+  const plan = parsePlanText(`actions:
+  - connector: crm
+    action: update
+    sideEffect: crm-write
+    evidence:
+      - approval:ticket-42
+      - reviewed-by:release-manager
+`, "plan.yaml");
+
+  assert.deepEqual(plan.actions[0].evidence, [
+    "approval:ticket-42",
+    "reviewed-by:release-manager"
+  ]);
+});
+
+test("tiny YAML rejects malformed nested evidence entries with exact paths", () => {
+  for (const [entry, index] of [["", 0], ["false", 1], ["42", 1]]) {
+    const evidence = index === 0 ? `      - ${entry}` : `      - ticket:42\n      - ${entry}`;
+    assert.throws(
+      () => parsePlanText(`actions:\n  - connector: crm\n    evidence:\n${evidence}\n`, "plan.yaml"),
+      new RegExp(`plan\\.yaml: actions\\[0\\]\\.evidence\\[${index}\\] must be a non-empty string`)
+    );
+  }
+});
