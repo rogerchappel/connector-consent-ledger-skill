@@ -46,6 +46,21 @@ attached. Validation errors identify the exact field, such as
 arrays in scalar fields, and blank strings are rejected before report output
 or any ledger append.
 
+YAML evidence arrays use an indented sequence and retain their source order:
+
+```yaml
+actions:
+  - connector: crm
+    action: update
+    sideEffect: crm-write
+    evidence:
+      - context:change-window
+      - approval:ticket-42
+```
+
+Each nested entry must be a non-empty string. Invalid entries report their
+exact index, such as `actions[0].evidence[1]`.
+
 An action may set `"state": "blocked"` to explicitly prevent it regardless of
 its side-effect classification. This exact lowercase value is the only
 supported input-state override; the report uses a blocked-specific reason and
