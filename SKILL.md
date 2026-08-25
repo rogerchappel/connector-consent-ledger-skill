@@ -20,6 +20,9 @@ Use this skill when an agent has a planned connector action and must prove what 
 - Side effects match complete, case-insensitive tokens separated by
   non-alphanumeric characters. Unknown effects remain ask-first; classification
   precedence is blocked, read-only, draft, then ask-first.
+- If an action supplies multiple side-effect aliases (`sideEffect`,
+  `side_effect`, `effect`, or `risk`), their normalized values must agree;
+  conflicting aliases are rejected before review output or ledger writes.
 - `review` and `summarize` accept only `markdown` or `json` as explicit
   `--format` values.
 - `review --fail-on` accepts exactly `read-only`, `draft`, `approved`,

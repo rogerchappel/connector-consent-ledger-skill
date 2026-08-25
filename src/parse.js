@@ -45,6 +45,7 @@ function validatedPlan(plan, label) {
         validateNonEmptyString(action[field], label, `actions[${index}].${field}`);
       }
     }
+    validateSideEffectAliases(action, label, index);
     if (Object.hasOwn(action, "evidence")) {
       validateEvidence(action.evidence, label, `actions[${index}].evidence`);
     }
@@ -59,6 +60,24 @@ const ACTION_STRING_FIELDS = [
   "id", "connector", "action", "operation", "target", "sideEffect",
   "side_effect", "effect", "risk"
 ];
+
+const SIDE_EFFECT_FIELDS = ["sideEffect", "side_effect", "effect", "risk"];
+
+function validateSideEffectAliases(action, label, index) {
+  const aliases = SIDE_EFFECT_FIELDS
+    .filter((field) => Object.hasOwn(action, field))
+    .map((field) => ({ field, value: normalizeSideEffect(action[field]) }));
+  if (new Set(aliases.map(({ value }) => value)).size > 1) {
+    throw planError(
+      label,
+      `actions[${index}] has conflicting side-effect aliases: ${aliases.map(({ field }) => field).join(", ")}`
+    );
+  }
+}
+
+function normalizeSideEffect(value) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
 
 function validateNonEmptyString(value, label, path) {
   if (typeof value !== "string" || !value.trim()) {

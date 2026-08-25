@@ -39,7 +39,10 @@ containing at least one recognized action field such as `connector`, `action`,
 
 When present, `id`, `connector`, `action`, `operation`, `target`, and the
 side-effect aliases `sideEffect`, `side_effect`, `effect`, and `risk` must each
-be a non-empty string. `evidence` must be either one non-empty string or an
+be a non-empty string. When an action supplies more than one alias, their
+values must agree after case, surrounding whitespace, and non-alphanumeric
+separator normalization; contradictory aliases are rejected with the indexed
+field names before review output or a ledger append. `evidence` must be either one non-empty string or an
 array of non-empty strings; an empty array is allowed when no evidence is
 attached. Validation errors identify the exact field, such as
 `actions[2].target` or `actions[0].evidence[1]`. Numbers, booleans, objects,

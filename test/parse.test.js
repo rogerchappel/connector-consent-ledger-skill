@@ -45,6 +45,18 @@ test("rejects malformed action field values with exact paths", () => {
   }
 });
 
+test("rejects conflicting side-effect aliases with indexed field diagnostics", () => {
+  assert.throws(
+    () => normalizePlan({ actions: [{ sideEffect: "read", risk: "delete" }] }),
+    /actions\[0\] has conflicting side-effect aliases: sideEffect, risk/
+  );
+});
+
+test("accepts equivalent side-effect aliases after normalization", () => {
+  const action = { sideEffect: " READ ", side_effect: "read", effect: "Read", risk: " read " };
+  assert.deepEqual(normalizePlan({ actions: [action] }).actions[0], action);
+});
+
 test("accepts documented evidence forms and rejects malformed entries", () => {
   assert.deepEqual(normalizePlan({ actions: [{ evidence: "ticket:42" }] }).actions[0].evidence, "ticket:42");
   assert.deepEqual(normalizePlan({ actions: [{ evidence: [] }] }).actions[0].evidence, []);
