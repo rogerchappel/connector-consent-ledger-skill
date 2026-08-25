@@ -249,6 +249,28 @@ test("record leaves an existing ledger unchanged for malformed action fields", a
   }
 });
 
+test("review and record reject conflicting side-effect aliases before output or append", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "consent-ledger-alias-conflict-"));
+  const plan = join(directory, "plan.json");
+  const ledger = join(directory, "ledger.jsonl");
+  const original = `${JSON.stringify({ id: "existing", state: "draft" })}\n`;
+  await writeFile(plan, JSON.stringify({
+    actions: [{ connector: "crm", action: "inspect", sideEffect: "read", risk: "delete" }]
+  }));
+  await writeFile(ledger, original);
+
+  for (const args of [
+    ["review", plan, "--format", "json"],
+    ["record", plan, "--ledger", ledger]
+  ]) {
+    const error = await rejectsCli(...args);
+    assert.equal(error.code, 1);
+    assert.equal(error.stdout, "");
+    assert.match(error.stderr, /actions\[0\] has conflicting side-effect aliases: sideEffect, risk/);
+    assert.equal(await readFile(ledger, "utf8"), original);
+  }
+});
+
 test("review and record reject invalid policies before output or ledger append", async () => {
   const directory = await mkdtemp(join(tmpdir(), "consent-ledger-invalid-policy-"));
   const ledger = join(directory, "ledger.jsonl");
