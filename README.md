@@ -118,10 +118,12 @@ non-empty strings:
 Effect arrays replace the corresponding defaults used for classification, and
 `approvalEvidence` replaces the default approval markers. `states` records the
 fixed output-state vocabulary emitted by `init-policy`; changing it does not add
-new classification states. Empty arrays are allowed when a category should have
-no matches. Unknown properties, non-object policy roots, non-array overrides,
-and blank or non-string array entries are rejected before review output or a
-ledger append.
+new classification states. Surrounding whitespace is removed from every custom
+policy entry before matching; effect and approval-marker matching remains
+case-insensitive, and effect entries retain the boundary-aware matching described
+above. Empty arrays are allowed when a category should have no matches. Unknown
+properties, non-object policy roots, non-array overrides, and blank or non-string
+array entries are rejected before review output or a ledger append.
 
 Run `node src/cli.js init-policy --out consent.policy.json` to generate a valid
 policy containing every supported property.

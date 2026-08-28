@@ -9,7 +9,15 @@ export const defaultPolicy = {
 
 export function mergePolicy(policy = {}) {
   validatePolicy(policy);
-  return { ...defaultPolicy, ...policy };
+  return {
+    ...defaultPolicy,
+    ...Object.fromEntries(
+      Object.entries(policy).map(([property, values]) => [
+        property,
+        values.map((value) => value.trim())
+      ])
+    )
+  };
 }
 
 export function validatePolicy(policy) {
