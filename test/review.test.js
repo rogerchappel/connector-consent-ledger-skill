@@ -131,6 +131,33 @@ test("accepts supported custom policy overrides", () => {
   assert.deepEqual(report.actions.map((action) => action.state), ["blocked", "approved"]);
 });
 
+test("normalizes surrounding whitespace in custom effect policy entries", () => {
+  const policy = {
+    blockedEffects: [" delete "],
+    readOnlyEffects: [" inspect "],
+    draftEffects: [" local-write "],
+    askFirstEffects: [" publish "],
+    approvalEvidence: [" cab "]
+  };
+  const report = reviewPlan({
+    actions: [
+      { sideEffect: "inspect/delete" },
+      { sideEffect: "inspect/local-write" },
+      { sideEffect: "local-write/publish" },
+      { sideEffect: "publish", evidence: "CAB:19" },
+      { sideEffect: "publish" }
+    ]
+  }, policy);
+
+  assert.deepEqual(report.actions.map((action) => action.state), [
+    "blocked",
+    "read-only",
+    "draft",
+    "approved",
+    "ask-first"
+  ]);
+});
+
 test("rejects malformed and unknown custom policy properties", () => {
   for (const [policy, message] of [
     [null, "policy must be an object"],
