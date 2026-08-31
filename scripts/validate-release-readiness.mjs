@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 
 const pkg = JSON.parse(readFileSync("package.json", "utf8"));
+const workflow = readFileSync(".github/workflows/ci.yml", "utf8");
 const failures = [];
 
 function requireField(condition, message) {
@@ -16,6 +17,13 @@ requireField(pkg.bugs?.url === "https://github.com/rogerchappel/connector-consen
 requireField(pkg.homepage === "https://github.com/rogerchappel/connector-consent-ledger-skill#readme", "homepage must point at the README");
 requireField(pkg.bin?.["connector-consent-ledger"] === "./src/cli.js", "CLI bin must point at ./src/cli.js");
 requireField(Array.isArray(pkg.files), "package files allowlist is required");
+requireField(existsSync("package-lock.json"), "package-lock.json must be committed");
+requireField(/^permissions:\n  contents: read$/m.test(workflow), "CI permissions must remain contents: read");
+requireField(/node-version: \[20, 24\]/.test(workflow), "CI must test Node 20 and Node 24");
+requireField(/actions\/checkout@[0-9a-f]{40} # v4/.test(workflow), "checkout must be pinned to an immutable SHA with a v4 comment");
+requireField(/actions\/setup-node@[0-9a-f]{40} # v4/.test(workflow), "setup-node must be pinned to an immutable SHA with a v4 comment");
+requireField(/run: npm ci/.test(workflow), "CI must install with npm ci");
+requireField(!/run: npm install/.test(workflow), "CI must not fall back to npm install");
 
 for (const entry of ["src", "fixtures", "docs", "SKILL.md", "README.md", "LICENSE", "SECURITY.md", "CONTRIBUTING.md", "CHANGELOG.md"]) {
   requireField(pkg.files?.includes(entry), `package files allowlist must include ${entry}`);
