@@ -2,7 +2,7 @@ export function renderMarkdown(report) {
   const lines = [
     `# Connector Consent Report`,
     "",
-    `Source: ${report.source}`,
+    `Source: ${escapeMarkdownInline(report.source)}`,
     `Generated: ${report.generatedAt}`,
     `Total actions: ${report.summary.total}`,
     `Highest state: ${report.summary.highestState}`,
@@ -22,6 +22,14 @@ export function renderMarkdown(report) {
     lines.push(`| ${fields.join(" | ")} |`);
   }
   return lines.join("\n") + "\n";
+}
+
+function escapeMarkdownInline(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/([\\`*_{}\[\]()#+.!|-])/g, "\\$1");
 }
 
 function markdownTableField(value) {
