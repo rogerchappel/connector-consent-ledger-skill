@@ -8,7 +8,7 @@ export async function readPlan(file) {
 export function parsePlanText(text, label = "input") {
   const trimmed = text.trim();
   if (!trimmed) throw planError(label, "plan is blank");
-  if (/^(?:[\[{"\d-]|null\b|true\b|false\b)/.test(trimmed)) {
+  if (/^(?:[\[{]|"|-?\d|null\b|true\b|false\b)/.test(trimmed)) {
     const parsed = JSON.parse(trimmed);
     return normalizePlan(parsed, label);
   }
@@ -33,6 +33,9 @@ export function normalizePlan(plan, label = "input") {
 }
 
 function validatedPlan(plan, label) {
+  for (const field of ["name", "source"]) {
+    if (Object.hasOwn(plan, field)) validatePlanLabel(plan[field], label, field);
+  }
   plan.actions.forEach((action, index) => {
     if (!isObject(action)) {
       throw planError(label, `actions[${index}] must be an object`);
@@ -54,6 +57,12 @@ function validatedPlan(plan, label) {
     }
   });
   return plan;
+}
+
+function validatePlanLabel(value, label, field) {
+  if (typeof value !== "string" || !value.trim() || /[\u0000-\u001f\u007f]/.test(value)) {
+    throw planError(label, `${field} must be a non-empty single-line string without control characters`);
+  }
 }
 
 const ACTION_STRING_FIELDS = [
@@ -115,7 +124,7 @@ function planError(label, message) {
 
 function parseTinyYaml(text, label) {
   const lines = text.split(/\r?\n/);
-  const root = {};
+  let root = {};
   let currentKey = null;
   let currentItem = null;
   let nestedSequence = null;
@@ -124,6 +133,7 @@ function parseTinyYaml(text, label) {
     if (!line.trim()) continue;
     const keyMatch = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
     if (keyMatch && !raw.startsWith(" ")) {
+      if (Array.isArray(root)) throw new Error(`Unsupported YAML shape in ${label}: ${raw}`);
       const [, key, value] = keyMatch;
       if (value) root[key] = scalar(value);
       else {
@@ -139,9 +149,13 @@ function parseTinyYaml(text, label) {
       continue;
     }
     const itemMatch = line.match(/^\s*-\s*([A-Za-z0-9_-]+):\s*(.*)$/);
-    if (itemMatch && currentKey) {
+    if (itemMatch && (currentKey || !/^\s/.test(line))) {
       currentItem = { [itemMatch[1]]: scalar(itemMatch[2]) };
-      root[currentKey].push(currentItem);
+      if (currentKey) root[currentKey].push(currentItem);
+      else {
+        if (!Array.isArray(root)) root = [];
+        root.push(currentItem);
+      }
       nestedSequence = null;
       continue;
     }

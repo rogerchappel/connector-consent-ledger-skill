@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { normalizePlan, parsePlanText } from "../src/parse.js";
+import { reviewPlan } from "../src/review.js";
 
 test("accepts documented plan roots", () => {
   const action = { connector: "browser", action: "inspect", sideEffect: "read" };
@@ -10,6 +11,28 @@ test("accepts documented plan roots", () => {
   assert.deepEqual(parsePlanText(JSON.stringify(action)).actions, [action]);
   assert.deepEqual(parsePlanText("[]"), { actions: [] });
   assert.deepEqual(parsePlanText('{"actions":[]}'), { actions: [] });
+});
+
+test("parses a root YAML action sequence like the equivalent JSON array", () => {
+  const yaml = parsePlanText("- connector: crm\n  action: inspect\n  sideEffect: read\n", "plan.yaml");
+  const json = parsePlanText('[{"connector":"crm","action":"inspect","sideEffect":"read"}]', "plan.json");
+  assert.deepEqual(yaml, json);
+  assert.deepEqual(
+    reviewPlan(yaml).actions.map(({ connector, action, sideEffect, state }) => ({ connector, action, sideEffect, state })),
+    reviewPlan(json).actions.map(({ connector, action, sideEffect, state }) => ({ connector, action, sideEffect, state }))
+  );
+});
+
+test("validates plan name and source envelope fields", () => {
+  for (const field of ["name", "source"]) {
+    for (const value of ["", "  ", 42, false, null, {}, [], "two\nlines", "nul\u0000byte", "tab\tvalue"]) {
+      assert.throws(
+        () => normalizePlan({ [field]: value, actions: [] }, "plan.json"),
+        new RegExp(`plan\\.json: ${field} must be a non-empty single-line string without control characters`)
+      );
+    }
+  }
+  assert.equal(normalizePlan({ name: " release #42 ", actions: [] }).name, " release #42 ");
 });
 
 test("rejects blank and unknown plan roots", () => {
