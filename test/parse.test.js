@@ -12,6 +12,24 @@ test("accepts documented plan roots", () => {
   assert.deepEqual(parsePlanText('{"actions":[]}'), { actions: [] });
 });
 
+test("parses a root YAML action sequence like the equivalent JSON array", () => {
+  const yaml = parsePlanText("- connector: crm\n  action: inspect\n  sideEffect: read\n", "plan.yaml");
+  const json = parsePlanText('[{"connector":"crm","action":"inspect","sideEffect":"read"}]', "plan.json");
+  assert.deepEqual(yaml, json);
+});
+
+test("validates plan name and source envelope fields", () => {
+  for (const field of ["name", "source"]) {
+    for (const value of ["", "  ", 42, false, null, {}, [], "two\nlines", "nul\u0000byte", "tab\tvalue"]) {
+      assert.throws(
+        () => normalizePlan({ [field]: value, actions: [] }, "plan.json"),
+        new RegExp(`plan\\.json: ${field} must be a non-empty single-line string without control characters`)
+      );
+    }
+  }
+  assert.equal(normalizePlan({ name: " release #42 ", actions: [] }).name, " release #42 ");
+});
+
 test("rejects blank and unknown plan roots", () => {
   assert.throws(() => parsePlanText(" \n"), /input: plan is blank/);
   assert.throws(() => parsePlanText("null"), /input: plan root must be an object or array/);

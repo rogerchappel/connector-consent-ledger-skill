@@ -220,6 +220,25 @@ test("review and record reject invalid plans before producing output", async () 
   await assert.rejects(readFile(ledger, "utf8"), { code: "ENOENT" });
 });
 
+test("review and record reject invalid plan envelope fields before output or append", async () => {
+  const directory = await mkdtemp(join(tmpdir(), "consent-ledger-invalid-envelope-"));
+  const ledger = join(directory, "ledger.jsonl");
+  const original = `${JSON.stringify({ id: "existing", state: "draft" })}\n`;
+  await writeFile(ledger, original);
+
+  for (const [name, value] of [["name", 42], ["source", "injected\n# heading"]]) {
+    const plan = join(directory, `${name}.json`);
+    await writeFile(plan, JSON.stringify({ [name]: value, actions: [{ connector: "crm", action: "inspect", sideEffect: "read" }] }));
+    for (const args of [["review", plan, "--format", "json"], ["record", plan, "--ledger", ledger]]) {
+      const error = await rejectsCli(...args);
+      assert.equal(error.code, 1);
+      assert.equal(error.stdout, "");
+      assert.match(error.stderr, new RegExp(`${name} must be a non-empty single-line string`));
+      assert.equal(await readFile(ledger, "utf8"), original);
+    }
+  }
+});
+
 test("record leaves an existing ledger unchanged for malformed action fields", async () => {
   const directory = await mkdtemp(join(tmpdir(), "consent-ledger-action-schema-"));
   const ledger = join(directory, "ledger.jsonl");
