@@ -32,8 +32,8 @@ The CLI never calls Slack, CRMs, browsers, project-management systems, or MCP se
 
 ### Action plan shapes
 
-JSON and YAML plans may use an object with an `actions` array. JSON also accepts
-a root action array or a single action object. Each action must be an object
+JSON and YAML plans may use an object with an `actions` array. Both formats also
+accept a root action array; JSON additionally accepts a single action object. Each action must be an object
 containing at least one recognized action field such as `connector`, `action`,
 `operation`, `target`, `sideEffect`, `effect`, `risk`, `state`, or `evidence`.
 
@@ -48,6 +48,12 @@ attached. Validation errors identify the exact field, such as
 `actions[2].target` or `actions[0].evidence[1]`. Numbers, booleans, objects,
 arrays in scalar fields, and blank strings are rejected before report output
 or any ledger append.
+
+Optional plan-level `name` and `source` fields must be non-empty strings on one
+line and cannot contain control characters. `name` takes precedence when both
+are present. JSON reports retain the exact accepted value; Markdown reports
+escape Markdown punctuation and HTML delimiters so source text cannot create a
+heading, link, tag, or additional report line.
 
 YAML evidence arrays use an indented sequence and retain their source order:
 
@@ -168,7 +174,9 @@ line breaks inside table fields; JSON output retains the original field values.
 ## Limitations
 
 YAML support is intentionally tiny and meant for simple fixture-style plans. It
-accepts top-level scalar properties and one top-level list of flat mappings.
+accepts top-level scalar properties plus one top-level list of flat mappings,
+or a root sequence of flat action mappings. Root sequences beginning with `-`
+are parsed as YAML rather than being sent through the JSON parser.
 Scalar values may be unquoted or wrapped in matching single or double quotes;
 the surrounding quotes are removed, but YAML escape sequences are not decoded.
 A `#` starts an inline comment only when it is outside quotes and preceded by
