@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Upgrade checkout and setup-node to reviewed v7 commit pins, with release-gate
+  regression coverage and the Node 24 Actions Runner requirement documented.
 - Parse root YAML action sequences and validate/contain plan source metadata
   before review output or ledger append.
 - Enforce non-empty string action fields and string evidence values with exact
