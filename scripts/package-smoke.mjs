@@ -1,5 +1,5 @@
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, rmSync } from "node:fs";
+import { mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -32,6 +32,19 @@ try {
   mkdirSync(consumer);
   execFileSync("npm", ["init", "--yes"], { cwd: consumer, stdio: "ignore" });
   execFileSync("npm", ["install", "--ignore-scripts", join(directory, filename)], { cwd: consumer, stdio: "inherit" });
+
+  const installedPackage = join(consumer, "node_modules", "connector-consent-ledger-skill");
+  const packageJson = JSON.parse(readFileSync(join(installedPackage, "package.json"), "utf8"));
+  if (packageJson.main || packageJson.exports) {
+    throw new Error("Package must remain CLI-only and must not advertise a JavaScript import entry point");
+  }
+  const importAttempt = spawnSync(process.execPath, ["--input-type=module", "-e", "import('connector-consent-ledger-skill')"], {
+    cwd: consumer,
+    encoding: "utf8",
+  });
+  if (importAttempt.status === 0 || !importAttempt.stderr.includes("ERR_MODULE_NOT_FOUND")) {
+    throw new Error("Installed package unexpectedly exposes a package-root JavaScript import entry point");
+  }
 
   const cli = join(consumer, "node_modules", ".bin", "connector-consent-ledger");
   const help = execFileSync(cli, ["--help"], { cwd: consumer, encoding: "utf8" });
