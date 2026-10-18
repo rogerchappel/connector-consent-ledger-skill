@@ -12,7 +12,7 @@ ship
 - `npm run smoke`
 - `npm run package:smoke`
 - `npm run release:check`
-- `node src/cli.js record fixtures/mixed-actions.json --ledger /tmp/consent-ledger.jsonl`
+- Optional, **write-producing** ledger check: `node src/cli.js record fixtures/mixed-actions.json --ledger /tmp/consent-ledger.jsonl`. This appends consent entries to `/tmp/consent-ledger.jsonl` (creating the file if needed); it is not a read-only check. For a non-writing verification, run `node src/cli.js review fixtures/mixed-actions.json --format markdown` instead.
 
 ## Notes
 
