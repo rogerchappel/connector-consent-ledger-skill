@@ -35,6 +35,14 @@ test("validates plan name and source envelope fields", () => {
   assert.equal(normalizePlan({ name: " release #42 ", actions: [] }).name, " release #42 ");
 });
 
+test("reports actionable location for malformed JSON plans", () => {
+  assert.throws(
+    () => parsePlanText('{\n  "actions": [\n    {"connector": "crm",}\n  ]\n}', "plan.json"),
+    /plan\.json: invalid JSON at line 3, column 25:/
+  );
+  assert.throws(() => parsePlanText("{", "broken.json"), /broken\.json: invalid JSON at line 1, column 2:/);
+});
+
 test("rejects blank and unknown plan roots", () => {
   assert.throws(() => parsePlanText(" \n"), /input: plan is blank/);
   assert.throws(() => parsePlanText("null"), /input: plan root must be an object or array/);

@@ -9,7 +9,13 @@ export function parsePlanText(text, label = "input") {
   const trimmed = text.trim();
   if (!trimmed) throw planError(label, "plan is blank");
   if (/^(?:[\[{]|"|-?\d|null\b|true\b|false\b)/.test(trimmed)) {
-    const parsed = JSON.parse(trimmed);
+    let parsed;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch (error) {
+      const location = jsonErrorLocation(trimmed, error);
+      throw planError(label, `invalid JSON${location}: ${error.message}`);
+    }
     return normalizePlan(parsed, label);
   }
   return normalizePlan(parseTinyYaml(trimmed, label), label);
@@ -120,6 +126,16 @@ function hasRecognizedActionField(action) {
 
 function planError(label, message) {
   return new Error(`${label}: ${message}`);
+}
+
+function jsonErrorLocation(text, error) {
+  const match = error.message.match(/position (\d+)/i);
+  if (!match) return "";
+  const position = Number(match[1]);
+  const before = text.slice(0, position);
+  const line = before.split("\n").length;
+  const column = position - before.lastIndexOf("\n");
+  return ` at line ${line}, column ${column}`;
 }
 
 function parseTinyYaml(text, label) {
