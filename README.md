@@ -5,7 +5,7 @@ A local-first CLI for reviewing connector action plans before an agent performs 
 ## Quickstart
 
 ```bash
-npm install
+npm ci
 npm run smoke
 node src/cli.js review fixtures/mixed-actions.json --format json
 node src/cli.js init-policy --out consent.policy.json
