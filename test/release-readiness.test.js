@@ -7,7 +7,7 @@ const checkoutV7 = "3d3c42e5aac5ba805825da76410c181273ba90b1";
 const setupNodeV7 = "820762786026740c76f36085b0efc47a31fe5020";
 
 function workflow({ checkout = checkoutV7, setupNode = setupNodeV7 } = {}) {
-  return `permissions:\n  contents: read\nnode-version: [20, 22, 24]\nuses: actions/checkout@${checkout} # v7.0.1\nuses: actions/setup-node@${setupNode} # v7.0.0\nrun: npm ci\n`;
+  return `permissions:\n  contents: read\nnode-version: [20, 20.0.0, 22, 24]\nuses: actions/checkout@${checkout} # v7.0.1\nuses: actions/setup-node@${setupNode} # v7.0.0\nrun: npm ci\n`;
 }
 
 test("accepts the reviewed checkout and setup-node v7 pins", () => {

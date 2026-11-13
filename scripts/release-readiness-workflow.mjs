@@ -8,7 +8,7 @@ export function validateWorkflow(workflow) {
   };
 
   requireField(/^permissions:\n  contents: read$/m.test(workflow), "CI permissions must remain contents: read");
-  requireField(/node-version: \[20, 22, 24\]/.test(workflow), "CI must test Node 20, Node 22, and Node 24");
+  requireField(/node-version: \[20, 20\.0\.0, 22, 24\]/.test(workflow), "CI must test Node 20, Node 22, and Node 24");
   requireField(
     workflow.includes(`actions/checkout@${CHECKOUT_V7} # v7.0.1`),
     "checkout must use the reviewed actions/checkout v7.0.1 commit"
