@@ -118,6 +118,21 @@ test("tiny YAML rejects malformed scalar action fields with exact paths", () => 
   );
 });
 
+test("tiny YAML rejects duplicate root mapping keys instead of discarding actions", () => {
+  const repeatedActions = `actions:
+  - connector: crm
+    action: inspect
+actions: []`;
+
+  assert.throws(() => parsePlanText(repeatedActions, "plan.yaml"),
+    /plan\.yaml: duplicate YAML mapping key "actions"/);
+  assert.deepEqual(parsePlanText(`name: review
+actions:
+  - connector: crm
+    action: inspect`, "valid.yaml").actions,
+  [{ connector: "crm", action: "inspect" }]);
+});
+
 test("tiny YAML preserves nested evidence sequences in order", () => {
   const plan = parsePlanText(`actions:
   - connector: crm

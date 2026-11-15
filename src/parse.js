@@ -151,6 +151,9 @@ function parseTinyYaml(text, label) {
     if (keyMatch && !raw.startsWith(" ")) {
       if (Array.isArray(root)) throw new Error(`Unsupported YAML shape in ${label}: ${raw}`);
       const [, key, value] = keyMatch;
+      if (Object.hasOwn(root, key)) {
+        throw planError(label, `duplicate YAML mapping key "${key}"`);
+      }
       if (value) root[key] = scalar(value);
       else {
         root[key] = [];
