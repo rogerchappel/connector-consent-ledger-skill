@@ -38,7 +38,8 @@
     "CONTRIBUTING.md",
     "CHANGELOG.md",
     "scripts",
-    "test"
+    "test",
+    "src/cli.js"
   ],
   "repository": {
     "type": "git",
