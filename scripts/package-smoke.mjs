@@ -9,6 +9,8 @@ try {
   const packOutput = execFileSync("npm", ["pack", "--json", "--pack-destination", directory], { encoding: "utf8" });
   const [{ filename, files }] = JSON.parse(packOutput);
   const names = new Set(files.map((file) => file.path));
+  const declaredBin = JSON.parse(readFileSync("package.json", "utf8")).bin;
+  const binEntries = typeof declaredBin === "string" ? { "connector-consent-ledger-skill": declaredBin } : declaredBin;
 
   for (const expected of [
   "package.json",
@@ -18,13 +20,18 @@ try {
   "CONTRIBUTING.md",
   "CHANGELOG.md",
   "SKILL.md",
-  "src/cli.js",
   "src/review.js",
   "fixtures/mixed-actions.json",
   "docs/PRD.md",
   ]) {
     if (!names.has(expected)) {
       throw new Error(`Missing expected package file: ${expected}`);
+    }
+  }
+
+  for (const [name, target] of Object.entries(binEntries ?? {})) {
+    if (!names.has(target.replace(/^\.\//, ""))) {
+      throw new Error(`Missing packed bin target for ${name}: ${target}`);
     }
   }
 
@@ -35,6 +42,17 @@ try {
 
   const installedPackage = join(consumer, "node_modules", "connector-consent-ledger-skill");
   const packageJson = JSON.parse(readFileSync(join(installedPackage, "package.json"), "utf8"));
+  for (const [name, target] of Object.entries(binEntries ?? {})) {
+    if (packageJson.bin?.[name] !== target) {
+      throw new Error(`Installed package bin mapping is missing or changed for ${name}`);
+    }
+    const resolvedBin = join(consumer, "node_modules", ".bin", name);
+    const binHelp = execFileSync(resolvedBin, ["--help"], { cwd: consumer, encoding: "utf8" });
+    if (!binHelp.includes("Commands: review, record, summarize, init-policy")) {
+      throw new Error(`Installed bin ${name} did not execute successfully`);
+    }
+  }
+
   if (packageJson.main || packageJson.exports) {
     throw new Error("Package must remain CLI-only and must not advertise a JavaScript import entry point");
   }
