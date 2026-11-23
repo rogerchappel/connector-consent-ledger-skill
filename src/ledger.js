@@ -1,12 +1,16 @@
 import { appendFile, readFile } from "node:fs/promises";
 
 export async function appendLedger(file, report, metadata = {}) {
-  const entries = report.actions.map((action) => ({
-    recordedAt: new Date().toISOString(),
-    source: report.source,
-    ...metadata,
-    ...action
-  }));
+  const entries = report.actions.map((action) => {
+    const { recordedAt: _recordedAt, source: _source, state: _state, ...fields } = action;
+    return {
+      ...metadata,
+      ...fields,
+      recordedAt: new Date().toISOString(),
+      source: report.source,
+      state: action.state
+    };
+  });
   if (entries.length) await appendFile(file, entries.map((entry) => JSON.stringify(entry)).join("\n") + "\n");
   return entries;
 }
