@@ -14,15 +14,28 @@ test("classifies connector side effects", () => {
   assert.deepEqual(report.actions.map((action) => action.state), ["read-only", "ask-first", "approved", "blocked"]);
 });
 
-test("an explicit blocked state overrides a read-like side effect consistently", () => {
-  const report = reviewPlan({ actions: [
-    { id: "explicit-block", connector: "crm", action: "inspect", sideEffect: "read", state: "blocked" }
-  ] });
+test("an explicit blocked state takes precedence over policy classifications", () => {
+  const cases = [
+    { sideEffect: "read", expectedPolicyState: "read-only" },
+    { sideEffect: "local-write", expectedPolicyState: "draft" },
+    { sideEffect: "crm-write", expectedPolicyState: "ask-first" },
+    { sideEffect: "credential-export", expectedPolicyState: "blocked" }
+  ];
+  const report = reviewPlan({ actions: cases.map(({ sideEffect }) => ({
+    id: `explicit-${sideEffect}`,
+    connector: "crm",
+    action: "review",
+    sideEffect,
+    state: "blocked"
+  })) });
 
-  assert.deepEqual(report.summary, { total: 1, counts: { blocked: 1 }, highestState: "blocked" });
-  assert.equal(report.actions[0].state, "blocked");
-  assert.equal(report.actions[0].reason, "Plan explicitly marks this action as blocked.");
-  assert.match(renderMarkdown(report), /\| blocked \| crm \| inspect \| unspecified \| Plan explicitly marks this action as blocked\. \|/);
+  assert.deepEqual(cases.map(({ expectedPolicyState }) => expectedPolicyState), [
+    "read-only", "draft", "ask-first", "blocked"
+  ]);
+  assert.deepEqual(report.summary, { total: 4, counts: { blocked: 4 }, highestState: "blocked" });
+  assert.deepEqual(report.actions.map(({ state }) => state), ["blocked", "blocked", "blocked", "blocked"]);
+  assert.ok(report.actions.every(({ reason }) => reason === "Plan explicitly marks this action as blocked."));
+  assert.match(renderMarkdown(report), /\| blocked \| crm \| review \| unspecified \| Plan explicitly marks this action as blocked\. \|/);
 });
 
 test("rejects unsupported or malformed explicit states", () => {
